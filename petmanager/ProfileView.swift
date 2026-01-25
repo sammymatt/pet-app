@@ -181,6 +181,13 @@ struct ProfileView: View {
                 AddPetView()
             }
         }
+        .onAppear {
+            #if DEBUG
+            if viewModel.pets.isEmpty {
+                viewModel.fetchPet(id: 70)
+            }
+            #endif
+        }
     }
 }
 

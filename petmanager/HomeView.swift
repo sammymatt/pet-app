@@ -31,7 +31,7 @@ struct HomeView: View {
                                 .foregroundColor(.white)
                                 .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
                             
-                            Text("Pet Manager")
+                            Text("Pet Pal")
                                 .font(.system(size: 36, weight: .bold, design: .rounded))
                                 .foregroundColor(.white)
                             
