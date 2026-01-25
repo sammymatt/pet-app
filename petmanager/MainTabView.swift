@@ -24,6 +24,11 @@ struct MainTabView: View {
                 .tabItem {
                     Label("Health", systemImage: "heart.text.square.fill")
                 }
+            
+            SettingsView()
+                .tabItem {
+                    Label("Settings", systemImage: "gearshape.fill")
+                }
         }
         .accentColor(Color(red: 0.6, green: 0.4, blue: 0.9))
     }

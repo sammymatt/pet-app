@@ -73,6 +73,12 @@ struct HomeView: View {
                         }
                         .padding(.horizontal, 20)
                         .padding(.bottom, 20)
+                        
+                        // Version Number
+                        Text("v1.0.0")
+                            .font(.system(size: 10, weight: .regular))
+                            .foregroundColor(.white.opacity(0.5))
+                            .padding(.bottom, 10)
                     }
                 }
             }

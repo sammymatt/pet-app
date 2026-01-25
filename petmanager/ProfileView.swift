@@ -10,6 +10,8 @@ import SwiftUI
 struct ProfileView: View {
     @EnvironmentObject var viewModel: PetViewModel
     @State private var showingAddPet = false
+    @State private var showingDeleteAlert = false
+    @State private var petToDelete: Pet?
     
     var body: some View {
         NavigationView {
@@ -162,6 +164,45 @@ struct ProfileView: View {
                                     }
                                 }
                                 .padding(.horizontal, 20)
+                                
+                                // Edit and Delete Buttons
+                                HStack(spacing: 12) {
+                                    Button(action: {
+                                        // TODO: Implement edit functionality
+                                    }) {
+                                        HStack {
+                                            Image(systemName: "pencil")
+                                            Text("Edit")
+                                        }
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .foregroundColor(.white)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 16)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 16)
+                                                .fill(Color(red: 0.5, green: 0.7, blue: 1.0).opacity(0.8))
+                                        )
+                                    }
+                                    
+                                    Button(action: {
+                                        petToDelete = pet
+                                        showingDeleteAlert = true
+                                    }) {
+                                        HStack {
+                                            Image(systemName: "trash")
+                                            Text("Delete")
+                                        }
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .foregroundColor(.white)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 16)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 16)
+                                                .fill(Color(red: 1.0, green: 0.4, blue: 0.4).opacity(0.8))
+                                        )
+                                    }
+                                }
+                                .padding(.horizontal, 20)
                                 .padding(.bottom, 20)
                             }
                         }
@@ -179,6 +220,16 @@ struct ProfileView: View {
             .navigationBarHidden(true)
             .sheet(isPresented: $showingAddPet) {
                 AddPetView()
+            }
+            .alert("Delete Pet", isPresented: $showingDeleteAlert) {
+                Button("Cancel", role: .cancel) { }
+                Button("Delete", role: .destructive) {
+                    if let pet = petToDelete {
+                        viewModel.deletePet(pet)
+                    }
+                }
+            } message: {
+                Text("Are you sure you want to remove this pet?")
             }
         }
         .onAppear {

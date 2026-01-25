@@ -90,11 +90,23 @@ class PetViewModel: ObservableObject {
     }
     
     func deletePet(_ pet: Pet) {
-        if let index = pets.firstIndex(where: { $0.id == pet.id }) {
-            pets.remove(at: index)
-            if selectedPet?.id == pet.id {
-                selectedPet = pets.first
-            }
-        }
+        PetService.shared.deletePet(id: pet.id)
+            .sink(receiveCompletion: { completion in
+                switch completion {
+                case .finished:
+                    break
+                case .failure(let error):
+                    print("Error deleting pet: \(error)")
+                }
+            }, receiveValue: { [weak self] _ in
+                // Remove from local state after successful deletion
+                if let index = self?.pets.firstIndex(where: { $0.id == pet.id }) {
+                    self?.pets.remove(at: index)
+                    if self?.selectedPet?.id == pet.id {
+                        self?.selectedPet = self?.pets.first
+                    }
+                }
+            })
+            .store(in: &cancellables)
     }
 }

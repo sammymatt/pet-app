@@ -61,4 +61,22 @@ class PetService {
             .receive(on: DispatchQueue.main)
             .eraseToAnyPublisher()
     }
+    
+    // DELETE PET
+    func deletePet(id: Int) -> AnyPublisher<Void, Error> {
+        let url = baseURL.appendingPathComponent("pets").appendingPathComponent("\(id)")
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        
+        return URLSession.shared.dataTaskPublisher(for: request)
+            .tryMap { _, response in
+                guard let httpResponse = response as? HTTPURLResponse,
+                      (200...299).contains(httpResponse.statusCode) else {
+                    throw URLError(.badServerResponse)
+                }
+                return ()
+            }
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
 }
