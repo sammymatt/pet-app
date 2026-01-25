@@ -13,6 +13,7 @@ struct ProfileView: View {
     @State private var showingDeleteAlert = false
     @State private var petToDelete: Pet?
     @State private var showingEditPet = false
+    @State private var showingWeightTracking = false
     
     var body: some View {
         NavigationView {
@@ -139,12 +140,17 @@ struct ProfileView: View {
                                                 color: Color(red: 0.5, green: 0.7, blue: 1.0)
                                             )
                                             
-                                            DetailBox(
-                                                icon: "scalemass.fill",
-                                                label: "Weight",
-                                                value: String(format: "%.1f kg", pet.weight),
-                                                color: Color(red: 0.4, green: 0.8, blue: 0.6)
-                                            )
+                                            Button(action: {
+                                                showingWeightTracking = true
+                                            }) {
+                                                DetailBox(
+                                                    icon: "scalemass.fill",
+                                                    label: "Weight",
+                                                    value: String(format: "%.1f kg", pet.weight),
+                                                    color: Color(red: 0.4, green: 0.8, blue: 0.6)
+                                                )
+                                            }
+                                            .buttonStyle(PlainButtonStyle())
                                         }
                                         
                                         HStack(spacing: 12) {
@@ -225,6 +231,11 @@ struct ProfileView: View {
             .sheet(isPresented: $showingEditPet) {
                 if let pet = viewModel.selectedPet {
                     AddPetView(petToEdit: pet)
+                }
+            }
+            .sheet(isPresented: $showingWeightTracking) {
+                if let pet = viewModel.selectedPet {
+                    WeightTrackingView(pet: pet)
                 }
             }
             .alert("Delete Pet", isPresented: $showingDeleteAlert) {
