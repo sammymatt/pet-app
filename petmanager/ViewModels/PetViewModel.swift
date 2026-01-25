@@ -64,7 +64,13 @@ class PetViewModel: ObservableObject {
             color: color
         )
         
-        PetService.shared.createPet(petRequest: request)
+        #if DEBUG
+        let userId: Int? = 1
+        #else
+        let userId: Int? = nil
+        #endif
+        
+        PetService.shared.createPet(petRequest: request, userId: userId)
             .sink(receiveCompletion: { completion in
                 switch completion {
                 case .finished:

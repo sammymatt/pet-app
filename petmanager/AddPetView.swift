@@ -30,7 +30,7 @@ struct AddPetView: View {
             Form {
                 Section(header: Text("Pet Info")) {
                     TextField("Name", text: $name)
-                    TextField("Breed", text: $breed)
+                    TextField("Species", text: $breed)
                     TextField("Age (e.g. 2 years)", text: $age)
                     TextField("Weight (e.g. 5 kg)", text: $weight)
                     

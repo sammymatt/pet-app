@@ -25,8 +25,14 @@ class PetService {
     }
     
     // CREATE PET
-    func createPet(petRequest: PetCreationRequest) -> AnyPublisher<Pet, Error> {
-        let url = baseURL.appendingPathComponent("pets")
+    func createPet(petRequest: PetCreationRequest, userId: Int? = nil) -> AnyPublisher<Pet, Error> {
+        let url: URL
+        if let userId = userId {
+            url = baseURL.appendingPathComponent("users").appendingPathComponent("\(userId)").appendingPathComponent("pets")
+        } else {
+            url = baseURL.appendingPathComponent("pets")
+        }
+        
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
