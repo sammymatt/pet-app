@@ -109,4 +109,36 @@ class PetViewModel: ObservableObject {
             })
             .store(in: &cancellables)
     }
+    
+    func updatePet(_ pet: Pet, name: String, breed: String, age: Int, description: String, weight: Double, gender: String, color: String) {
+        let request = PetCreationRequest(
+            id: pet.id,
+            name: name,
+            species: breed,
+            age: age,
+            description: description,
+            weight: weight,
+            gender: gender,
+            color: color
+        )
+        
+        PetService.shared.updatePet(id: pet.id, petRequest: request)
+            .sink(receiveCompletion: { completion in
+                switch completion {
+                case .finished:
+                    break
+                case .failure(let error):
+                    print("Error updating pet: \(error)")
+                }
+            }, receiveValue: { [weak self] updatedPet in
+                // Update in local state
+                if let index = self?.pets.firstIndex(where: { $0.id == pet.id }) {
+                    self?.pets[index] = updatedPet
+                    if self?.selectedPet?.id == pet.id {
+                        self?.selectedPet = updatedPet
+                    }
+                }
+            })
+            .store(in: &cancellables)
+    }
 }

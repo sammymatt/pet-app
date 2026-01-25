@@ -79,4 +79,25 @@ class PetService {
             .receive(on: DispatchQueue.main)
             .eraseToAnyPublisher()
     }
+    
+    // UPDATE PET
+    func updatePet(id: Int, petRequest: PetCreationRequest) -> AnyPublisher<Pet, Error> {
+        let url = baseURL.appendingPathComponent("pets").appendingPathComponent("\(id)")
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        do {
+            let data = try JSONEncoder().encode(petRequest)
+            request.httpBody = data
+        } catch {
+            return Fail(error: error).eraseToAnyPublisher()
+        }
+        
+        return URLSession.shared.dataTaskPublisher(for: request)
+            .map { $0.data }
+            .decode(type: Pet.self, decoder: JSONDecoder())
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
 }

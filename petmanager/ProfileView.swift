@@ -12,6 +12,7 @@ struct ProfileView: View {
     @State private var showingAddPet = false
     @State private var showingDeleteAlert = false
     @State private var petToDelete: Pet?
+    @State private var showingEditPet = false
     
     var body: some View {
         NavigationView {
@@ -168,7 +169,7 @@ struct ProfileView: View {
                                 // Edit and Delete Buttons
                                 HStack(spacing: 12) {
                                     Button(action: {
-                                        // TODO: Implement edit functionality
+                                        showingEditPet = true
                                     }) {
                                         HStack {
                                             Image(systemName: "pencil")
@@ -220,6 +221,11 @@ struct ProfileView: View {
             .navigationBarHidden(true)
             .sheet(isPresented: $showingAddPet) {
                 AddPetView()
+            }
+            .sheet(isPresented: $showingEditPet) {
+                if let pet = viewModel.selectedPet {
+                    AddPetView(petToEdit: pet)
+                }
             }
             .alert("Delete Pet", isPresented: $showingDeleteAlert) {
                 Button("Cancel", role: .cancel) { }
