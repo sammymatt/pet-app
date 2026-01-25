@@ -44,4 +44,15 @@ class PetService {
             .receive(on: DispatchQueue.main)
             .eraseToAnyPublisher()
     }
+    
+    // FETCH PETS by USER ID
+    func fetchPets(forUserId userId: Int) -> AnyPublisher<[Pet], Error> {
+        let url = baseURL.appendingPathComponent("users").appendingPathComponent("\(userId)").appendingPathComponent("pets")
+        
+        return URLSession.shared.dataTaskPublisher(for: url)
+            .map { $0.data }
+            .decode(type: [Pet].self, decoder: JSONDecoder())
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
 }

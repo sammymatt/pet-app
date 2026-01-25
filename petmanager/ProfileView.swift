@@ -183,8 +183,9 @@ struct ProfileView: View {
         }
         .onAppear {
             #if DEBUG
+            // Temporarily fetch pets for user ID 1
             if viewModel.pets.isEmpty {
-                viewModel.fetchPet(id: 70)
+                viewModel.fetchPets(forUserId: 1)
             }
             #endif
         }

@@ -17,7 +17,7 @@ struct MainTabView: View {
             
             ProfileView()
                 .tabItem {
-                    Label("Profile", systemImage: "person.fill")
+                    Label("Pets", systemImage: "dog.fill")
                 }
             
             HealthView()

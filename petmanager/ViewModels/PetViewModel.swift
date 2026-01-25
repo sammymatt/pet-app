@@ -34,6 +34,24 @@ class PetViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
+    func fetchPets(forUserId userId: Int) {
+        PetService.shared.fetchPets(forUserId: userId)
+            .sink(receiveCompletion: { completion in
+                switch completion {
+                case .finished:
+                    break
+                case .failure(let error):
+                    print("Error fetching pets for user: \(error)")
+                }
+            }, receiveValue: { [weak self] pets in
+                self?.pets = pets
+                if self?.selectedPet == nil {
+                    self?.selectedPet = pets.first
+                }
+            })
+            .store(in: &cancellables)
+    }
+    
     func addPet(name: String, breed: String, age: Int, description: String, weight: Double, gender: String, color: String) {
         let request = PetCreationRequest(
             id: 0,
