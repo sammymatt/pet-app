@@ -49,36 +49,48 @@ struct HealthView: View {
                         // Widgets Grid
                         LazyVGrid(columns: columns, spacing: 20) {
                             // Vaccines Widget
-                            HealthWidget(
-                                title: "Vaccines",
-                                icon: "syringe.fill",
-                                color: Color(red: 1.0, green: 0.6, blue: 0.4),
-                                subtitle: "Up to date"
-                            )
-                            
+                            NavigationLink(destination: VaccinesView()) {
+                                HealthWidgetContent(
+                                    title: "Vaccines",
+                                    icon: "syringe.fill",
+                                    color: Color(red: 1.0, green: 0.6, blue: 0.4),
+                                    subtitle: "Up to date"
+                                )
+                            }
+                            .buttonStyle(ScaleButtonStyle())
+
                             // Appointments Widget
-                            HealthWidget(
-                                title: "Appointments",
-                                icon: "calendar.badge.clock",
-                                color: Color(red: 0.9, green: 0.5, blue: 0.7),
-                                subtitle: "1 upcoming"
-                            )
-                            
+                            NavigationLink(destination: AppointmentsView()) {
+                                HealthWidgetContent(
+                                    title: "Appointments",
+                                    icon: "calendar.badge.clock",
+                                    color: Color(red: 0.9, green: 0.5, blue: 0.7),
+                                    subtitle: "1 upcoming"
+                                )
+                            }
+                            .buttonStyle(ScaleButtonStyle())
+
                             // Tablets Widget
-                            HealthWidget(
-                                title: "Tablets",
-                                icon: "pills.fill",
-                                color: Color(red: 0.5, green: 0.7, blue: 1.0),
-                                subtitle: "Daily meds"
-                            )
-                            
-                            // Medical Records (Extra)
-                            HealthWidget(
-                                title: "Records",
-                                icon: "doc.text.fill",
-                                color: Color(red: 0.8, green: 0.8, blue: 0.4),
-                                subtitle: "History"
-                            )
+                            NavigationLink(destination: TabletsView()) {
+                                HealthWidgetContent(
+                                    title: "Tablets",
+                                    icon: "pills.fill",
+                                    color: Color(red: 0.5, green: 0.7, blue: 1.0),
+                                    subtitle: "Daily meds"
+                                )
+                            }
+                            .buttonStyle(ScaleButtonStyle())
+
+                            // Medical Records
+                            NavigationLink(destination: RecordsView()) {
+                                HealthWidgetContent(
+                                    title: "Records",
+                                    icon: "doc.text.fill",
+                                    color: Color(red: 0.8, green: 0.8, blue: 0.4),
+                                    subtitle: "History"
+                                )
+                            }
+                            .buttonStyle(ScaleButtonStyle())
                         }
                         .padding(20)
                     }
@@ -89,48 +101,64 @@ struct HealthView: View {
     }
 }
 
+struct HealthWidgetContent: View {
+    let title: String
+    let icon: String
+    let color: Color
+    let subtitle: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(color.opacity(0.2))
+                    .frame(width: 50, height: 50)
+
+                Image(systemName: icon)
+                    .font(.system(size: 24))
+                    .foregroundColor(color)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+
+                Text(subtitle)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.white.opacity(0.7))
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(16)
+        .frame(height: 140)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(.white.opacity(0.2))
+                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(.white.opacity(0.3), lineWidth: 1)
+        )
+    }
+}
+
 struct HealthWidget: View {
     let title: String
     let icon: String
     let color: Color
     let subtitle: String
-    
+
     var body: some View {
         Button(action: {
             // Action placeholder
         }) {
-            VStack(alignment: .leading, spacing: 12) {
-                ZStack {
-                    Circle()
-                        .fill(color.opacity(0.2))
-                        .frame(width: 50, height: 50)
-                    
-                    Image(systemName: icon)
-                        .font(.system(size: 24))
-                        .foregroundColor(color)
-                }
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(title)
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
-                    
-                    Text(subtitle)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.white.opacity(0.7))
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .padding(16)
-            .frame(height: 140)
-            .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(.white.opacity(0.2))
-                    .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(.white.opacity(0.3), lineWidth: 1)
+            HealthWidgetContent(
+                title: title,
+                icon: icon,
+                color: color,
+                subtitle: subtitle
             )
         }
         .buttonStyle(ScaleButtonStyle())
