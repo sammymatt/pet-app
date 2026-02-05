@@ -8,11 +8,13 @@
 import SwiftUI
 
 struct HealthView: View {
+    @EnvironmentObject var viewModel: PetViewModel
+
     let columns = [
         GridItem(.flexible()),
         GridItem(.flexible())
     ]
-    
+
     var body: some View {
         NavigationView {
             ZStack {
@@ -26,25 +28,53 @@ struct HealthView: View {
                     endPoint: .bottomTrailing
                 )
                 .ignoresSafeArea()
-                
-                ScrollView {
-                    VStack(spacing: 24) {
-                        // Header
-                        VStack(spacing: 12) {
-                            Image(systemName: "cross.case.fill")
-                                .font(.system(size: 60))
-                                .foregroundColor(.white)
-                                .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
-                            
-                            Text("Pet Health")
-                                .font(.system(size: 36, weight: .bold, design: .rounded))
-                                .foregroundColor(.white)
-                            
-                            Text("Manage care & records")
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundColor(.white.opacity(0.9))
+
+                VStack(spacing: 0) {
+                    // Pet Selector
+                    if !viewModel.pets.isEmpty {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 12) {
+                                ForEach(viewModel.pets) { pet in
+                                    PetSelectorChip(
+                                        pet: pet,
+                                        isSelected: viewModel.selectedPet?.id == pet.id
+                                    ) {
+                                        withAnimation {
+                                            viewModel.selectPet(pet)
+                                        }
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 12)
                         }
-                        .padding(.top, 40)
+                        .background(Color.black.opacity(0.1))
+                    }
+
+                    ScrollView {
+                        VStack(spacing: 24) {
+                            // Header
+                            VStack(spacing: 12) {
+                                Image(systemName: "cross.case.fill")
+                                    .font(.system(size: 60))
+                                    .foregroundColor(.white)
+                                    .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
+
+                                Text("Pet Health")
+                                    .font(.system(size: 36, weight: .bold, design: .rounded))
+                                    .foregroundColor(.white)
+
+                                if let pet = viewModel.selectedPet {
+                                    Text("Managing \(pet.name)'s care")
+                                        .font(.system(size: 16, weight: .medium))
+                                        .foregroundColor(.white.opacity(0.9))
+                                } else {
+                                    Text("Select a pet to manage")
+                                        .font(.system(size: 16, weight: .medium))
+                                        .foregroundColor(.white.opacity(0.9))
+                                }
+                            }
+                            .padding(.top, 20)
                         
                         // Widgets Grid
                         LazyVGrid(columns: columns, spacing: 20) {
@@ -60,7 +90,7 @@ struct HealthView: View {
                             .buttonStyle(ScaleButtonStyle())
 
                             // Appointments Widget
-                            NavigationLink(destination: AppointmentsView()) {
+                            NavigationLink(destination: AppointmentsView(petId: viewModel.selectedPet?.id ?? 0)) {
                                 HealthWidgetContent(
                                     title: "Appointments",
                                     icon: "calendar.badge.clock",
@@ -92,12 +122,88 @@ struct HealthView: View {
                             }
                             .buttonStyle(ScaleButtonStyle())
                         }
-                        .padding(20)
+                            .padding(20)
+                            .opacity(viewModel.selectedPet == nil ? 0.5 : 1.0)
+                            .disabled(viewModel.selectedPet == nil)
+
+                            // No pet selected message
+                            if viewModel.selectedPet == nil && !viewModel.pets.isEmpty {
+                                Text("Tap a pet above to view their health info")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(.white.opacity(0.8))
+                                    .padding(.bottom, 20)
+                            }
+
+                            // No pets message
+                            if viewModel.pets.isEmpty {
+                                VStack(spacing: 12) {
+                                    Image(systemName: "pawprint.circle")
+                                        .font(.system(size: 50))
+                                        .foregroundColor(.white.opacity(0.6))
+                                    Text("No pets added yet")
+                                        .font(.system(size: 18, weight: .medium))
+                                        .foregroundColor(.white.opacity(0.8))
+                                    Text("Add a pet from the Pets tab to manage their health")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(.white.opacity(0.6))
+                                        .multilineTextAlignment(.center)
+                                }
+                                .padding(.vertical, 40)
+                            }
+                        }
                     }
                 }
             }
             .navigationBarHidden(true)
         }
+    }
+}
+
+// MARK: - Pet Selector Chip
+
+struct PetSelectorChip: View {
+    let pet: Pet
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                // Pet avatar
+                Group {
+                    if UIImage(named: pet.imageName) != nil {
+                        Image(pet.imageName)
+                            .resizable()
+                            .scaledToFill()
+                    } else {
+                        ZStack {
+                            Color.white
+                            Image(systemName: "pawprint.fill")
+                                .font(.system(size: 14))
+                                .foregroundColor(.purple)
+                        }
+                    }
+                }
+                .frame(width: 32, height: 32)
+                .clipShape(Circle())
+
+                Text(pet.name)
+                    .font(.system(size: 14, weight: isSelected ? .bold : .medium))
+                    .foregroundColor(isSelected ? .white : .white.opacity(0.9))
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(
+                Capsule()
+                    .fill(isSelected ? Color.white.opacity(0.3) : Color.white.opacity(0.15))
+            )
+            .overlay(
+                Capsule()
+                    .stroke(isSelected ? Color.white : Color.clear, lineWidth: 2)
+            )
+        }
+        .scaleEffect(isSelected ? 1.05 : 1.0)
+        .animation(.easeInOut(duration: 0.2), value: isSelected)
     }
 }
 
@@ -175,4 +281,5 @@ struct ScaleButtonStyle: ButtonStyle {
 
 #Preview {
     HealthView()
+        .environmentObject(PetViewModel())
 }

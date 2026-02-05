@@ -14,6 +14,9 @@ struct ProfileView: View {
     @State private var petToDelete: Pet?
     @State private var showingEditPet = false
     @State private var showingWeightTracking = false
+    @State private var showingAgeView = false
+    @State private var showingGenderView = false
+    @State private var showingColorView = false
     
     var body: some View {
         NavigationView {
@@ -133,13 +136,18 @@ struct ProfileView: View {
                                     // Details Grid
                                     VStack(spacing: 12) {
                                         HStack(spacing: 12) {
-                                            DetailBox(
-                                                icon: "calendar",
-                                                label: "Age",
-                                                value: "\(pet.age) years",
-                                                color: Color(red: 0.5, green: 0.7, blue: 1.0)
-                                            )
-                                            
+                                            Button(action: {
+                                                showingAgeView = true
+                                            }) {
+                                                DetailBox(
+                                                    icon: "calendar",
+                                                    label: "Age",
+                                                    value: "\(pet.age) years",
+                                                    color: Color(red: 0.5, green: 0.7, blue: 1.0)
+                                                )
+                                            }
+                                            .buttonStyle(PlainButtonStyle())
+
                                             Button(action: {
                                                 showingWeightTracking = true
                                             }) {
@@ -152,21 +160,31 @@ struct ProfileView: View {
                                             }
                                             .buttonStyle(PlainButtonStyle())
                                         }
-                                        
+
                                         HStack(spacing: 12) {
-                                            DetailBox(
-                                                icon: "pawprint.fill",
-                                                label: "Gender",
-                                                value: pet.gender,
-                                                color: Color(red: 1.0, green: 0.6, blue: 0.8)
-                                            )
-                                            
-                                            DetailBox(
-                                                icon: "paintpalette.fill",
-                                                label: "Color",
-                                                value: pet.color ?? "N/A",
-                                                color: Color(red: 1.0, green: 0.7, blue: 0.3)
-                                            )
+                                            Button(action: {
+                                                showingGenderView = true
+                                            }) {
+                                                DetailBox(
+                                                    icon: "pawprint.fill",
+                                                    label: "Gender",
+                                                    value: pet.gender,
+                                                    color: Color(red: 1.0, green: 0.6, blue: 0.8)
+                                                )
+                                            }
+                                            .buttonStyle(PlainButtonStyle())
+
+                                            Button(action: {
+                                                showingColorView = true
+                                            }) {
+                                                DetailBox(
+                                                    icon: "paintpalette.fill",
+                                                    label: "Color",
+                                                    value: pet.color ?? "N/A",
+                                                    color: Color(red: 1.0, green: 0.7, blue: 0.3)
+                                                )
+                                            }
+                                            .buttonStyle(PlainButtonStyle())
                                         }
                                     }
                                 }
@@ -236,6 +254,30 @@ struct ProfileView: View {
             .sheet(isPresented: $showingWeightTracking) {
                 if let pet = viewModel.selectedPet {
                     WeightTrackingView(pet: pet)
+                }
+            }
+            .sheet(isPresented: $showingAgeView) {
+                if let pet = viewModel.selectedPet {
+                    NavigationView {
+                        AgeView(pet: pet)
+                            .environmentObject(viewModel)
+                    }
+                }
+            }
+            .sheet(isPresented: $showingGenderView) {
+                if let pet = viewModel.selectedPet {
+                    NavigationView {
+                        GenderView(pet: pet)
+                            .environmentObject(viewModel)
+                    }
+                }
+            }
+            .sheet(isPresented: $showingColorView) {
+                if let pet = viewModel.selectedPet {
+                    NavigationView {
+                        ColorView(pet: pet)
+                            .environmentObject(viewModel)
+                    }
                 }
             }
             .alert("Delete Pet", isPresented: $showingDeleteAlert) {

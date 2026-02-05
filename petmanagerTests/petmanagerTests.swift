@@ -8,10 +8,7 @@
 import Testing
 @testable import petmanager
 
-struct petmanagerTests {
-
-    @Test func example() async throws {
-        // Write your test here and use APIs like `#expect(...)` to check expected conditions.
-    }
-
-}
+// Main test entry point - actual tests are organized in separate files:
+// - PetModelTests.swift: Tests for Pet model encoding/decoding
+// - PetCreationRequestTests.swift: Tests for API request model
+// - PetViewModelTests.swift: Tests for ViewModel state management

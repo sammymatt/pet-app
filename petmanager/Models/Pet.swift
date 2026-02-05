@@ -19,6 +19,7 @@ struct Pet: Identifiable, Codable, Equatable {
     
     // Local-only fields
     var imageName: String = "pawprint.circle.fill"
+    var birthday: Date?
     
     enum CodingKeys: String, CodingKey {
         case id
@@ -29,11 +30,12 @@ struct Pet: Identifiable, Codable, Equatable {
         case weight
         case gender
         case color
-        // imageName ignored
+        case birthday
+        // imageName is local-only
     }
     
     // Initializer for local creation (testing or previews)
-    init(id: Int, name: String, breed: String, age: Int, description: String, weight: Double, gender: String, color: String? = nil, imageName: String = "pawprint.circle.fill") {
+    init(id: Int, name: String, breed: String, age: Int, description: String, weight: Double, gender: String, color: String? = nil, imageName: String = "pawprint.circle.fill", birthday: Date? = nil) {
         self.id = id
         self.name = name
         self.breed = breed
@@ -43,6 +45,7 @@ struct Pet: Identifiable, Codable, Equatable {
         self.gender = gender
         self.color = color
         self.imageName = imageName
+        self.birthday = birthday
     }
     
     // Helper to get a default pet (Willow)
@@ -70,4 +73,5 @@ struct PetCreationRequest: Codable {
     var weight: Double
     var gender: String
     var color: String?
+    var birthday: Date?
 }

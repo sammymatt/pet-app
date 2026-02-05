@@ -52,7 +52,7 @@ class PetViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
-    func addPet(name: String, breed: String, age: Int, description: String, weight: Double, gender: String, color: String) {
+    func addPet(name: String, breed: String, age: Int, description: String, weight: Double, gender: String, color: String, birthday: Date? = nil) {
         let request = PetCreationRequest(
             id: 0,
             name: name,
@@ -61,7 +61,8 @@ class PetViewModel: ObservableObject {
             description: description,
             weight: weight,
             gender: gender,
-            color: color
+            color: color,
+            birthday: birthday
         )
         
         #if DEBUG
@@ -110,7 +111,11 @@ class PetViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
-    func updatePet(_ pet: Pet, name: String, breed: String, age: Int, description: String, weight: Double, gender: String, color: String) {
+    func updatePet(_ pet: Pet) {
+        updatePet(pet, name: pet.name, breed: pet.breed, age: pet.age, description: pet.description, weight: pet.weight, gender: pet.gender, color: pet.color ?? "", birthday: pet.birthday)
+    }
+
+    func updatePet(_ pet: Pet, name: String, breed: String, age: Int, description: String, weight: Double, gender: String, color: String, birthday: Date? = nil) {
         let request = PetCreationRequest(
             id: pet.id,
             name: name,
@@ -119,7 +124,8 @@ class PetViewModel: ObservableObject {
             description: description,
             weight: weight,
             gender: gender,
-            color: color
+            color: color,
+            birthday: birthday
         )
         
         PetService.shared.updatePet(id: pet.id, petRequest: request)

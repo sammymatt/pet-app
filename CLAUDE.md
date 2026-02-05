@@ -16,13 +16,13 @@ open petmanager.xcodeproj
 xcodebuild -scheme petmanager -configuration Debug
 
 # Run tests
-xcodebuild test -scheme petmanager -destination 'platform=iOS Simulator,name=iPhone 16'
+xcodebuild test -scheme petmanager -destination 'platform=iOS Simulator,name=iPhone 17'
 
 # Run specific test class
-xcodebuild test -scheme petmanager -destination 'platform=iOS Simulator,name=iPhone 16' -only-testing:petmanagerTests/TestClassName
+xcodebuild test -scheme petmanager -destination 'platform=iOS Simulator,name=iPhone 17' -only-testing:petmanagerTests/TestClassName
 
 # Run specific test method
-xcodebuild test -scheme petmanager -destination 'platform=iOS Simulator,name=iPhone 16' -only-testing:petmanagerTests/TestClassName/testMethodName
+xcodebuild test -scheme petmanager -destination 'platform=iOS Simulator,name=iPhone 17' -only-testing:petmanagerTests/TestClassName/testMethodName
 ```
 
 ## Architecture
@@ -31,7 +31,7 @@ The app follows **MVVM (Model-View-ViewModel)** architecture:
 
 ```
 petmanager/
-├── Models/         # Data structures (Pet, PetCreationRequest)
+├── Models/         # Data structures (Pet, Appointment, request models)
 ├── ViewModels/     # State management (@Published properties, Combine)
 ├── Services/       # API layer (PetService singleton with Combine publishers)
 └── Views/          # SwiftUI views
@@ -52,6 +52,19 @@ petmanager/
 ## API Endpoints
 
 The backend provides these endpoints:
+
+**Pets:**
 - `GET/POST /pets` - List/create pets
 - `GET/PATCH/DELETE /pets/{id}` - Single pet operations
 - `GET/POST /users/{userId}/pets` - User-specific pet operations
+
+**Appointments:**
+- `GET /pets/{petId}/appointments` - List appointments for a pet
+- `POST /pets/{petId}/appointments` - Create appointment for a pet
+- `PATCH /appointments/{id}` - Update an appointment
+- `DELETE /appointments/{id}` - Delete an appointment
+
+## Date Formats
+
+- **Pet birthday**: `YYYY-MM-DD` format (e.g., `"2023-05-15"`)
+- **Appointment datetime**: ISO8601 format (e.g., `"2026-02-10T10:30:00Z"`)
