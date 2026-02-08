@@ -267,4 +267,217 @@ class PetService {
             .receive(on: DispatchQueue.main)
             .eraseToAnyPublisher()
     }
+
+    // MARK: - Vaccines
+
+    // FETCH VACCINES for a pet
+    func fetchVaccines(forPetId petId: Int) -> AnyPublisher<[Vaccine], Error> {
+        let url = baseURL.appendingPathComponent("pets").appendingPathComponent("\(petId)").appendingPathComponent("vaccines")
+
+        return URLSession.shared.dataTaskPublisher(for: url)
+            .map { $0.data }
+            .decode(type: [Vaccine].self, decoder: decoder)
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+
+    // CREATE VACCINE for a pet
+    func createVaccine(forPetId petId: Int, request: VaccineCreateRequest) -> AnyPublisher<Vaccine, Error> {
+        let url = baseURL.appendingPathComponent("pets").appendingPathComponent("\(petId)").appendingPathComponent("vaccines")
+
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        urlRequest.addValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        do {
+            let data = try encoder.encode(request)
+            urlRequest.httpBody = data
+        } catch {
+            return Fail(error: error).eraseToAnyPublisher()
+        }
+
+        return URLSession.shared.dataTaskPublisher(for: urlRequest)
+            .map { $0.data }
+            .decode(type: Vaccine.self, decoder: decoder)
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+
+    // UPDATE VACCINE
+    func updateVaccine(id: Int, request: VaccineUpdateRequest) -> AnyPublisher<Vaccine, Error> {
+        let url = baseURL.appendingPathComponent("vaccines").appendingPathComponent("\(id)")
+
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "PATCH"
+        urlRequest.addValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        do {
+            let data = try encoder.encode(request)
+            urlRequest.httpBody = data
+        } catch {
+            return Fail(error: error).eraseToAnyPublisher()
+        }
+
+        return URLSession.shared.dataTaskPublisher(for: urlRequest)
+            .map { $0.data }
+            .decode(type: Vaccine.self, decoder: decoder)
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+
+    // DELETE VACCINE
+    func deleteVaccine(id: Int) -> AnyPublisher<Void, Error> {
+        let url = baseURL.appendingPathComponent("vaccines").appendingPathComponent("\(id)")
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+
+        return URLSession.shared.dataTaskPublisher(for: request)
+            .tryMap { _, response in
+                guard let httpResponse = response as? HTTPURLResponse,
+                      (200...299).contains(httpResponse.statusCode) else {
+                    throw URLError(.badServerResponse)
+                }
+                return ()
+            }
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+
+    // MARK: - Records
+
+    // Decoder for records (handles mixed date formats)
+    private let recordsDecoder: JSONDecoder = {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let dateString = try container.decode(String.self)
+
+            // Try date-only format first (for vaccines)
+            let dateOnlyFormatter = DateFormatter()
+            dateOnlyFormatter.dateFormat = "yyyy-MM-dd"
+            dateOnlyFormatter.timeZone = TimeZone(identifier: "UTC")
+            if let date = dateOnlyFormatter.date(from: dateString) {
+                return date
+            }
+
+            // Try Python datetime format with microseconds
+            if let date = pythonDateTimeFormatter.date(from: dateString) {
+                return date
+            }
+            // Try without microseconds
+            if let date = pythonDateTimeFormatterNoMicro.date(from: dateString) {
+                return date
+            }
+            // Try ISO8601 with Z suffix
+            let isoFormatter = ISO8601DateFormatter()
+            isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            if let date = isoFormatter.date(from: dateString) {
+                return date
+            }
+            isoFormatter.formatOptions = [.withInternetDateTime]
+            if let date = isoFormatter.date(from: dateString) {
+                return date
+            }
+
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot decode date: \(dateString)")
+        }
+        return decoder
+    }()
+
+    // FETCH RECORDS for a user (all pets)
+    func fetchUserRecords(userId: Int) -> AnyPublisher<RecordsResponse, Error> {
+        let url = baseURL.appendingPathComponent("users").appendingPathComponent("\(userId)").appendingPathComponent("records")
+
+        return URLSession.shared.dataTaskPublisher(for: url)
+            .map { $0.data }
+            .decode(type: RecordsResponse.self, decoder: recordsDecoder)
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+
+    // FETCH RECORDS for a specific pet
+    func fetchPetRecords(petId: Int) -> AnyPublisher<RecordsResponse, Error> {
+        let url = baseURL.appendingPathComponent("pets").appendingPathComponent("\(petId)").appendingPathComponent("records")
+
+        return URLSession.shared.dataTaskPublisher(for: url)
+            .map { $0.data }
+            .decode(type: RecordsResponse.self, decoder: recordsDecoder)
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+
+    // MARK: - Tablets
+
+    // FETCH TABLETS for a pet
+    func fetchTablets(forPetId petId: Int) -> AnyPublisher<[Tablet], Error> {
+        let url = baseURL.appendingPathComponent("pets").appendingPathComponent("\(petId)").appendingPathComponent("tablets")
+
+        return URLSession.shared.dataTaskPublisher(for: url)
+            .map { $0.data }
+            .decode(type: [Tablet].self, decoder: decoder)
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+
+    // CREATE TABLET for a pet
+    func createTablet(forPetId petId: Int, request: TabletCreateRequest) -> AnyPublisher<Tablet, Error> {
+        let url = baseURL.appendingPathComponent("pets").appendingPathComponent("\(petId)").appendingPathComponent("tablets")
+
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        urlRequest.addValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        do {
+            let data = try encoder.encode(request)
+            urlRequest.httpBody = data
+        } catch {
+            return Fail(error: error).eraseToAnyPublisher()
+        }
+
+        return URLSession.shared.dataTaskPublisher(for: urlRequest)
+            .map { $0.data }
+            .decode(type: Tablet.self, decoder: decoder)
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+
+    // UPDATE TABLET
+    func updateTablet(id: Int, request: TabletUpdateRequest) -> AnyPublisher<Tablet, Error> {
+        let url = baseURL.appendingPathComponent("tablets").appendingPathComponent("\(id)")
+
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "PATCH"
+        urlRequest.addValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        do {
+            let data = try encoder.encode(request)
+            urlRequest.httpBody = data
+        } catch {
+            return Fail(error: error).eraseToAnyPublisher()
+        }
+
+        return URLSession.shared.dataTaskPublisher(for: urlRequest)
+            .map { $0.data }
+            .decode(type: Tablet.self, decoder: decoder)
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+
+    // DELETE TABLET
+    func deleteTablet(id: Int) -> AnyPublisher<Void, Error> {
+        let url = baseURL.appendingPathComponent("tablets").appendingPathComponent("\(id)")
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+
+        return URLSession.shared.dataTaskPublisher(for: request)
+            .tryMap { _, response in
+                guard let httpResponse = response as? HTTPURLResponse,
+                      (200...299).contains(httpResponse.statusCode) else {
+                    throw URLError(.badServerResponse)
+                }
+                return ()
+            }
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
 }

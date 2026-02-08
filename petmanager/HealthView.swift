@@ -79,7 +79,7 @@ struct HealthView: View {
                         // Widgets Grid
                         LazyVGrid(columns: columns, spacing: 20) {
                             // Vaccines Widget
-                            NavigationLink(destination: VaccinesView()) {
+                            NavigationLink(destination: VaccinesView(petId: viewModel.selectedPet?.id ?? 0)) {
                                 HealthWidgetContent(
                                     title: "Vaccines",
                                     icon: "syringe.fill",
@@ -101,7 +101,7 @@ struct HealthView: View {
                             .buttonStyle(ScaleButtonStyle())
 
                             // Tablets Widget
-                            NavigationLink(destination: TabletsView()) {
+                            NavigationLink(destination: TabletsView(petId: viewModel.selectedPet?.id ?? 0)) {
                                 HealthWidgetContent(
                                     title: "Tablets",
                                     icon: "pills.fill",
