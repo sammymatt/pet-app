@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 
 struct ProfileView: View {
     @EnvironmentObject var viewModel: PetViewModel
@@ -17,6 +18,8 @@ struct ProfileView: View {
     @State private var showingAgeView = false
     @State private var showingGenderView = false
     @State private var showingColorView = false
+    @State private var latestWeight: Double?
+    @State private var cancellables = Set<AnyCancellable>()
     
     var body: some View {
         NavigationView {
@@ -154,7 +157,7 @@ struct ProfileView: View {
                                                 DetailBox(
                                                     icon: "scalemass.fill",
                                                     label: "Weight",
-                                                    value: String(format: "%.1f kg", pet.weight),
+                                                    value: latestWeight.map { String(format: "%.1f kg", $0) } ?? "--",
                                                     color: Color(red: 0.4, green: 0.8, blue: 0.6)
                                                 )
                                             }
@@ -251,7 +254,11 @@ struct ProfileView: View {
                     AddPetView(petToEdit: pet)
                 }
             }
-            .sheet(isPresented: $showingWeightTracking) {
+            .sheet(isPresented: $showingWeightTracking, onDismiss: {
+                if let pet = viewModel.selectedPet {
+                    fetchLatestWeight(for: pet)
+                }
+            }) {
                 if let pet = viewModel.selectedPet {
                     WeightTrackingView(pet: pet)
                 }
@@ -298,7 +305,28 @@ struct ProfileView: View {
                 viewModel.fetchPets(forUserId: 1)
             }
             #endif
+            if let pet = viewModel.selectedPet {
+                fetchLatestWeight(for: pet)
+            }
         }
+        .onChange(of: viewModel.selectedPet) { _, newPet in
+            if let pet = newPet {
+                fetchLatestWeight(for: pet)
+            } else {
+                latestWeight = nil
+            }
+        }
+    }
+
+    private func fetchLatestWeight(for pet: Pet) {
+        PetService.shared.fetchWeights(forPetId: pet.id)
+            .sink(
+                receiveCompletion: { _ in },
+                receiveValue: { weights in
+                    latestWeight = weights.first?.weight
+                }
+            )
+            .store(in: &cancellables)
     }
 }
 

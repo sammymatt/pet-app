@@ -480,4 +480,79 @@ class PetService {
             .receive(on: DispatchQueue.main)
             .eraseToAnyPublisher()
     }
+
+    // MARK: - Weights
+
+    // FETCH WEIGHTS for a pet
+    func fetchWeights(forPetId petId: Int) -> AnyPublisher<[Weight], Error> {
+        let url = baseURL.appendingPathComponent("pets").appendingPathComponent("\(petId)").appendingPathComponent("weights")
+
+        return URLSession.shared.dataTaskPublisher(for: url)
+            .map { $0.data }
+            .decode(type: [Weight].self, decoder: appointmentDecoder)
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+
+    // CREATE WEIGHT for a pet
+    func createWeight(forPetId petId: Int, request: WeightCreateRequest) -> AnyPublisher<Weight, Error> {
+        let url = baseURL.appendingPathComponent("pets").appendingPathComponent("\(petId)").appendingPathComponent("weights")
+
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        urlRequest.addValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        do {
+            let data = try appointmentEncoder.encode(request)
+            urlRequest.httpBody = data
+        } catch {
+            return Fail(error: error).eraseToAnyPublisher()
+        }
+
+        return URLSession.shared.dataTaskPublisher(for: urlRequest)
+            .map { $0.data }
+            .decode(type: Weight.self, decoder: appointmentDecoder)
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+
+    // UPDATE WEIGHT
+    func updateWeight(id: Int, request: WeightUpdateRequest) -> AnyPublisher<Weight, Error> {
+        let url = baseURL.appendingPathComponent("weights").appendingPathComponent("\(id)")
+
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "PATCH"
+        urlRequest.addValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        do {
+            let data = try appointmentEncoder.encode(request)
+            urlRequest.httpBody = data
+        } catch {
+            return Fail(error: error).eraseToAnyPublisher()
+        }
+
+        return URLSession.shared.dataTaskPublisher(for: urlRequest)
+            .map { $0.data }
+            .decode(type: Weight.self, decoder: appointmentDecoder)
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+
+    // DELETE WEIGHT
+    func deleteWeight(id: Int) -> AnyPublisher<Void, Error> {
+        let url = baseURL.appendingPathComponent("weights").appendingPathComponent("\(id)")
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+
+        return URLSession.shared.dataTaskPublisher(for: request)
+            .tryMap { _, response in
+                guard let httpResponse = response as? HTTPURLResponse,
+                      (200...299).contains(httpResponse.statusCode) else {
+                    throw URLError(.badServerResponse)
+                }
+                return ()
+            }
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
 }

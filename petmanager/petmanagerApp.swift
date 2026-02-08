@@ -10,11 +10,16 @@ import SwiftUI
 @main
 struct petmanagerApp: App {
     @StateObject private var petViewModel = PetViewModel()
-    
+    @State private var isLoggedIn = false
+
     var body: some Scene {
         WindowGroup {
-            MainTabView()
-                .environmentObject(petViewModel)
+            if isLoggedIn {
+                MainTabView()
+                    .environmentObject(petViewModel)
+            } else {
+                LoginView(isLoggedIn: $isLoggedIn)
+            }
         }
     }
 }
