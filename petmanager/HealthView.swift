@@ -19,15 +19,7 @@ struct HealthView: View {
         NavigationView {
             ZStack {
                 // Gradient background
-                LinearGradient(
-                    gradient: Gradient(colors: [
-                        Color(red: 0.4, green: 0.8, blue: 0.6),
-                        Color(red: 0.3, green: 0.6, blue: 0.8)
-                    ]),
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
+                AppBackground(style: .health)
 
                 VStack(spacing: 0) {
                     // Pet Selector
@@ -170,22 +162,7 @@ struct PetSelectorChip: View {
         Button(action: action) {
             HStack(spacing: 8) {
                 // Pet avatar
-                Group {
-                    if UIImage(named: pet.imageName) != nil {
-                        Image(pet.imageName)
-                            .resizable()
-                            .scaledToFill()
-                    } else {
-                        ZStack {
-                            Color.white
-                            Image(systemName: "pawprint.fill")
-                                .font(.system(size: 14))
-                                .foregroundColor(.purple)
-                        }
-                    }
-                }
-                .frame(width: 32, height: 32)
-                .clipShape(Circle())
+                PetAvatarView(pet: pet, size: 32)
 
                 Text(pet.name)
                     .font(.system(size: 14, weight: isSelected ? .bold : .medium))

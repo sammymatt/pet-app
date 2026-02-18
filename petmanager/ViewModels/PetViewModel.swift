@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Combine
+import UIKit
 
 class PetViewModel: ObservableObject {
     @Published var pets: [Pet] = []
@@ -28,8 +29,12 @@ class PetViewModel: ObservableObject {
                     print("Error fetching pet: \(error)")
                 }
             }, receiveValue: { [weak self] pet in
-                self?.pets.append(pet)
-                self?.selectedPet = pet
+                var p = pet
+                if let pref = PetImageManager.shared.imagePreference(for: p.id) {
+                    p.imageName = pref
+                }
+                self?.pets.append(p)
+                self?.selectedPet = p
             })
             .store(in: &cancellables)
     }
@@ -44,15 +49,25 @@ class PetViewModel: ObservableObject {
                     print("Error fetching pets for user: \(error)")
                 }
             }, receiveValue: { [weak self] pets in
-                self?.pets = pets
+                let updatedPets = pets.map { pet -> Pet in
+                    var p = pet
+                    if let pref = PetImageManager.shared.imagePreference(for: p.id) {
+                        p.imageName = pref
+                    }
+                    return p
+                }
+                self?.pets = updatedPets
                 if self?.selectedPet == nil {
-                    self?.selectedPet = pets.first
+                    self?.selectedPet = updatedPets.first
+                } else if let selectedId = self?.selectedPet?.id,
+                          let updated = updatedPets.first(where: { $0.id == selectedId }) {
+                    self?.selectedPet = updated
                 }
             })
             .store(in: &cancellables)
     }
     
-    func addPet(name: String, breed: String, age: Int, description: String, weight: Double, gender: String, color: String, birthday: Date? = nil) {
+    func addPet(name: String, breed: String, age: Int, description: String, weight: Double, gender: String, color: String, birthday: Date? = nil, imageName: String = "pawprint.circle.fill", customImage: UIImage? = nil) {
         let request = PetCreationRequest(
             id: 0,
             name: name,
@@ -64,13 +79,13 @@ class PetViewModel: ObservableObject {
             color: color,
             birthday: birthday
         )
-        
+
         #if DEBUG
         let userId: Int? = 1
         #else
         let userId: Int? = nil
         #endif
-        
+
         PetService.shared.createPet(petRequest: request, userId: userId)
             .sink(receiveCompletion: { completion in
                 switch completion {
@@ -80,8 +95,14 @@ class PetViewModel: ObservableObject {
                     print("Error creating pet: \(error)")
                 }
             }, receiveValue: { [weak self] newPet in
-                self?.pets.append(newPet)
-                self?.selectedPet = newPet
+                var pet = newPet
+                pet.imageName = imageName
+                PetImageManager.shared.saveImagePreference(imageName, for: pet.id)
+                if let image = customImage {
+                    PetImageManager.shared.saveImage(image, for: pet.id)
+                }
+                self?.pets.append(pet)
+                self?.selectedPet = pet
             })
             .store(in: &cancellables)
     }
@@ -100,7 +121,7 @@ class PetViewModel: ObservableObject {
                     print("Error deleting pet: \(error)")
                 }
             }, receiveValue: { [weak self] _ in
-                // Remove from local state after successful deletion
+                PetImageManager.shared.deleteImage(for: pet.id)
                 if let index = self?.pets.firstIndex(where: { $0.id == pet.id }) {
                     self?.pets.remove(at: index)
                     if self?.selectedPet?.id == pet.id {
@@ -115,7 +136,7 @@ class PetViewModel: ObservableObject {
         updatePet(pet, name: pet.name, breed: pet.breed, age: pet.age, description: pet.description, weight: pet.weight, gender: pet.gender, color: pet.color ?? "", birthday: pet.birthday)
     }
 
-    func updatePet(_ pet: Pet, name: String, breed: String, age: Int, description: String, weight: Double, gender: String, color: String, birthday: Date? = nil) {
+    func updatePet(_ pet: Pet, name: String, breed: String, age: Int, description: String, weight: Double, gender: String, color: String, birthday: Date? = nil, imageName: String? = nil, customImage: UIImage? = nil) {
         let request = PetCreationRequest(
             id: pet.id,
             name: name,
@@ -127,7 +148,7 @@ class PetViewModel: ObservableObject {
             color: color,
             birthday: birthday
         )
-        
+
         PetService.shared.updatePet(id: pet.id, petRequest: request)
             .sink(receiveCompletion: { completion in
                 switch completion {
@@ -137,11 +158,24 @@ class PetViewModel: ObservableObject {
                     print("Error updating pet: \(error)")
                 }
             }, receiveValue: { [weak self] updatedPet in
-                // Update in local state
-                if let index = self?.pets.firstIndex(where: { $0.id == pet.id }) {
-                    self?.pets[index] = updatedPet
-                    if self?.selectedPet?.id == pet.id {
-                        self?.selectedPet = updatedPet
+                var pet = updatedPet
+                if let imgName = imageName {
+                    pet.imageName = imgName
+                    PetImageManager.shared.saveImagePreference(imgName, for: pet.id)
+                    if let image = customImage {
+                        PetImageManager.shared.saveImage(image, for: pet.id)
+                    } else if imgName != "custom_photo" {
+                        // Switching from photo to SF Symbol — remove old photo
+                        PetImageManager.shared.deleteImage(for: pet.id)
+                        PetImageManager.shared.saveImagePreference(imgName, for: pet.id)
+                    }
+                } else if let pref = PetImageManager.shared.imagePreference(for: pet.id) {
+                    pet.imageName = pref
+                }
+                if let index = self?.pets.firstIndex(where: { $0.id == updatedPet.id }) {
+                    self?.pets[index] = pet
+                    if self?.selectedPet?.id == updatedPet.id {
+                        self?.selectedPet = pet
                     }
                 }
             })

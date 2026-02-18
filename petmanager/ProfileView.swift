@@ -25,15 +25,7 @@ struct ProfileView: View {
         NavigationView {
             ZStack {
                 // Gradient background
-                LinearGradient(
-                    gradient: Gradient(colors: [
-                        Color(red: 0.95, green: 0.7, blue: 0.4),
-                        Color(red: 0.9, green: 0.5, blue: 0.6)
-                    ]),
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
+                AppBackground(style: .profile)
                 
                 VStack(spacing: 0) {
                     // Pet Switcher Header
@@ -80,25 +72,7 @@ struct ProfileView: View {
                                 // Profile Header
                                 VStack(spacing: 16) {
                                     // Profile Image
-                                    Group {
-                                        if UIImage(named: pet.imageName) != nil {
-                                            Image(pet.imageName)
-                                                .resizable()
-                                                .scaledToFill()
-                                        } else {
-                                            // Fallback for system images or missing assets
-                                            ZStack {
-                                                Color.white.opacity(0.8)
-                                                Image(systemName: pet.imageName.isEmpty ? "pawprint.circle.fill" : pet.imageName)
-                                                    .resizable()
-                                                    .scaledToFit()
-                                                    .padding(30)
-                                                    .foregroundColor(.purple)
-                                            }
-                                        }
-                                    }
-                                    .frame(width: 140, height: 140)
-                                    .clipShape(Circle())
+                                    PetAvatarView(pet: pet, size: 140)
                                     .overlay(
                                         Circle()
                                             .stroke(
@@ -338,24 +312,7 @@ struct PetAvatarButton: View {
     var body: some View {
         Button(action: action) {
             VStack {
-                Group {
-                    if UIImage(named: pet.imageName) != nil {
-                        Image(pet.imageName)
-                            .resizable()
-                            .scaledToFill()
-                    } else {
-                        ZStack {
-                            Color.white
-                            Image(systemName: pet.imageName.isEmpty ? "pawprint.circle.fill" : pet.imageName)
-                                .resizable()
-                                .scaledToFit()
-                                .padding(8)
-                                .foregroundColor(.purple)
-                        }
-                    }
-                }
-                .frame(width: 60, height: 60)
-                .clipShape(Circle())
+                PetAvatarView(pet: pet, size: 60)
                 .overlay(
                     Circle()
                         .stroke(isSelected ? Color.white : Color.white.opacity(0.5), lineWidth: isSelected ? 3 : 1)
