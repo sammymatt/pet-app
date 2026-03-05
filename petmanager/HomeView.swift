@@ -21,15 +21,7 @@ struct HomeView: View {
         NavigationView {
             ZStack {
                 // Gradient background
-                LinearGradient(
-                    gradient: Gradient(colors: [
-                        Color(red: 0.4, green: 0.6, blue: 0.95),
-                        Color(red: 0.6, green: 0.4, blue: 0.9)
-                    ]),
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
+                AppBackground(style: .home)
                 
                 ScrollView {
                     VStack(spacing: 24) {
@@ -40,7 +32,7 @@ struct HomeView: View {
                                 .foregroundColor(.white)
                                 .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
                             
-                            Text("Pet Pal")
+                            Text("Pawfolio")
                                 .font(.system(size: 36, weight: .bold, design: .rounded))
                                 .foregroundColor(.white)
                             

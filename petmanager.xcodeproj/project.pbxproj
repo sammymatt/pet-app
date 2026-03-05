@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		223AB7B72F50E91200761BC0 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 22C248C12F26A00100D5C61A /* Supabase */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		22C248A22F25B53600D5C61A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +56,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				223AB7B72F50E91200761BC0 /* Supabase in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +117,7 @@
 			);
 			name = petmanager;
 			packageProductDependencies = (
+				22C248C12F26A00100D5C61A /* Supabase */,
 			);
 			productName = petmanager;
 			productReference = 22C248942F25B53500D5C61A /* petmanager.app */;
@@ -195,6 +201,9 @@
 			);
 			mainGroup = 22C2488B2F25B53500D5C61A;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				22C248C02F26A00000D5C61A /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 22C248952F25B53500D5C61A /* Products */;
 			projectDirPath = "";
@@ -570,6 +579,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		22C248C02F26A00000D5C61A /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		22C248C12F26A00100D5C61A /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 22C248C02F26A00000D5C61A /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 22C2488C2F25B53500D5C61A /* Project object */;
 }

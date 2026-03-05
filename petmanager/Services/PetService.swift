@@ -538,6 +538,55 @@ class PetService {
             .eraseToAnyPublisher()
     }
 
+    // MARK: - Feature Requests
+
+    // FETCH FEATURE REQUESTS
+    func fetchFeatureRequests() -> AnyPublisher<[FeatureRequest], Error> {
+        let url = baseURL.appendingPathComponent("feature-requests")
+
+        return URLSession.shared.dataTaskPublisher(for: url)
+            .map { $0.data }
+            .decode(type: [FeatureRequest].self, decoder: JSONDecoder())
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+
+    // CREATE FEATURE REQUEST
+    func createFeatureRequest(request: FeatureRequestCreate) -> AnyPublisher<FeatureRequest, Error> {
+        let url = baseURL.appendingPathComponent("feature-requests")
+
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        urlRequest.addValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        do {
+            let data = try JSONEncoder().encode(request)
+            urlRequest.httpBody = data
+        } catch {
+            return Fail(error: error).eraseToAnyPublisher()
+        }
+
+        return URLSession.shared.dataTaskPublisher(for: urlRequest)
+            .map { $0.data }
+            .decode(type: FeatureRequest.self, decoder: JSONDecoder())
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+
+    // VOTE ON FEATURE REQUEST
+    func voteFeatureRequest(id: Int) -> AnyPublisher<FeatureRequest, Error> {
+        let url = baseURL.appendingPathComponent("feature-requests").appendingPathComponent("\(id)").appendingPathComponent("vote")
+
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+
+        return URLSession.shared.dataTaskPublisher(for: urlRequest)
+            .map { $0.data }
+            .decode(type: FeatureRequest.self, decoder: JSONDecoder())
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+
     // DELETE WEIGHT
     func deleteWeight(id: Int) -> AnyPublisher<Void, Error> {
         let url = baseURL.appendingPathComponent("weights").appendingPathComponent("\(id)")

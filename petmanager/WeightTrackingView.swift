@@ -69,15 +69,7 @@ struct WeightTrackingView: View {
         NavigationView {
             ZStack {
                 // Gradient background
-                LinearGradient(
-                    gradient: Gradient(colors: [
-                        Color(red: 0.4, green: 0.8, blue: 0.6),
-                        Color(red: 0.3, green: 0.6, blue: 0.8)
-                    ]),
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
+                AppBackground(style: .health)
 
                 if isLoading {
                     ProgressView()
@@ -448,15 +440,7 @@ struct AddWeightView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                LinearGradient(
-                    gradient: Gradient(colors: [
-                        Color(red: 0.4, green: 0.8, blue: 0.6),
-                        Color(red: 0.3, green: 0.6, blue: 0.8)
-                    ]),
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
+                AppBackground(style: .health)
 
                 ScrollView {
                     VStack(spacing: 24) {
@@ -619,15 +603,7 @@ struct EditWeightView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                LinearGradient(
-                    gradient: Gradient(colors: [
-                        Color(red: 0.4, green: 0.8, blue: 0.6),
-                        Color(red: 0.3, green: 0.6, blue: 0.8)
-                    ]),
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
+                AppBackground(style: .health)
 
                 ScrollView {
                     VStack(spacing: 24) {

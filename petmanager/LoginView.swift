@@ -8,21 +8,18 @@
 import SwiftUI
 
 struct LoginView: View {
-    @Binding var isLoggedIn: Bool
+    @Environment(AuthViewModel.self) private var authViewModel
+    @State private var email = ""
+    @State private var password = ""
+    @State private var isSignUp = false
     @State private var showingGuestWarning = false
+    @State private var showingForgotPassword = false
+    @State private var isSubmitting = false
+    @State private var validationError: String?
 
     var body: some View {
         ZStack {
-            // Gradient background
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    Color(red: 0.6, green: 0.4, blue: 0.8),
-                    Color(red: 0.4, green: 0.6, blue: 0.9)
-                ]),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            AppBackground(style: .login)
 
             VStack(spacing: 0) {
                 Spacer()
@@ -32,83 +29,111 @@ struct LoginView: View {
                     ZStack {
                         Circle()
                             .fill(.white.opacity(0.2))
-                            .frame(width: 140, height: 140)
+                            .frame(width: 120, height: 120)
 
                         Image(systemName: "pawprint.fill")
-                            .font(.system(size: 70))
+                            .font(.system(size: 60))
                             .foregroundColor(.white)
                     }
-                    .shadow(color: .black.opacity(0.2), radius: 20, x: 0, y: 10)
 
-                    VStack(spacing: 8) {
-                        Text("Pet Pal")
-                            .font(.system(size: 42, weight: .bold, design: .rounded))
-                            .foregroundColor(.white)
-
-                        Text("Care for your furry friends")
-                            .font(.system(size: 18, weight: .medium))
-                            .foregroundColor(.white.opacity(0.8))
-                    }
+                    Text("Pawfolio")
+                        .font(.system(size: 36, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
                 }
 
                 Spacer()
 
-                // Buttons
-                VStack(spacing: 16) {
-                    // Sign In Button
-                    Button(action: {
-                        // TODO: Implement sign in
-                    }) {
-                        Text("Sign In")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(Color(red: 0.5, green: 0.4, blue: 0.7))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 18)
-                            .background(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .fill(.white)
-                            )
-                            .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
+                VStack(spacing: 14) {
+                    TextField("Email", text: $email)
+                        .textContentType(.emailAddress)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .keyboardType(.emailAddress)
+                        .padding(14)
+                        .background(.white.opacity(0.2))
+                        .cornerRadius(12)
+                        .foregroundColor(.white)
+                        .tint(.white)
+
+                    SecureField("Password", text: $password)
+                        .textContentType(isSignUp ? .newPassword : .password)
+                        .padding(14)
+                        .background(.white.opacity(0.2))
+                        .cornerRadius(12)
+                        .foregroundColor(.white)
+                        .tint(.white)
+
+                    // Forgot password (only in sign-in mode)
+                    if !isSignUp {
+                        HStack {
+                            Spacer()
+                            Button {
+                                showingForgotPassword = true
+                            } label: {
+                                Text("Forgot Password?")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(.white.opacity(0.8))
+                            }
+                        }
                     }
 
-                    // Sign Up Button
-                    Button(action: {
-                        // TODO: Implement sign up
-                    }) {
-                        Text("Create Account")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 18)
-                            .background(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .fill(.white.opacity(0.25))
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .stroke(.white.opacity(0.5), lineWidth: 1)
-                            )
-                    }
-
-                    // Divider
-                    HStack {
-                        Rectangle()
-                            .fill(.white.opacity(0.3))
-                            .frame(height: 1)
-                        Text("or")
+                    // Error / success messages
+                    if let error = validationError ?? authViewModel.errorMessage {
+                        Text(error)
                             .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.white.opacity(0.7))
-                            .padding(.horizontal, 16)
-                        Rectangle()
-                            .fill(.white.opacity(0.3))
-                            .frame(height: 1)
+                            .foregroundColor(Color(red: 1.0, green: 0.6, blue: 0.6))
+                            .multilineTextAlignment(.center)
                     }
-                    .padding(.vertical, 8)
 
-                    // Continue as Guest Button
-                    Button(action: {
+                    if let success = authViewModel.successMessage {
+                        Text(success)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(Color(red: 0.6, green: 1.0, blue: 0.7))
+                            .multilineTextAlignment(.center)
+                    }
+
+                    // Primary action button
+                    Button {
+                        handleSubmit()
+                    } label: {
+                        HStack(spacing: 8) {
+                            if isSubmitting {
+                                ProgressView()
+                                    .tint(Color(red: 0.5, green: 0.4, blue: 0.7))
+                            }
+                            Text(isSignUp ? "Create Account" : "Sign In")
+                                .font(.system(size: 18, weight: .semibold))
+                        }
+                        .foregroundColor(Color(red: 0.5, green: 0.4, blue: 0.7))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(.white)
+                        .cornerRadius(14)
+                        .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
+                    }
+                    .disabled(isSubmitting)
+                    .opacity(isSubmitting ? 0.7 : 1)
+
+                    // Toggle sign in / sign up
+                    Button {
+                        isSignUp.toggle()
+                        clearMessages()
+                    } label: {
+                        Text(isSignUp ? "Already have an account? Sign In" : "Don't have an account? Create one")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundColor(.white.opacity(0.9))
+                    }
+
+                    HStack {
+                        Rectangle().fill(.white.opacity(0.3)).frame(height: 1)
+                        Text("or").font(.system(size: 14)).foregroundColor(.white.opacity(0.7)).padding(.horizontal, 12)
+                        Rectangle().fill(.white.opacity(0.3)).frame(height: 1)
+                    }
+                    .padding(.vertical, 4)
+
+                    Button {
                         showingGuestWarning = true
-                    }) {
+                    } label: {
                         HStack {
                             Image(systemName: "person.fill.questionmark")
                             Text("Continue as Guest")
@@ -116,7 +141,6 @@ struct LoginView: View {
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.white.opacity(0.9))
                     }
-                    .padding(.bottom, 8)
                 }
                 .padding(.horizontal, 32)
                 .padding(.bottom, 50)
@@ -125,14 +149,178 @@ struct LoginView: View {
         .alert("Continue as Guest?", isPresented: $showingGuestWarning) {
             Button("Cancel", role: .cancel) { }
             Button("Continue") {
-                isLoggedIn = true
+                authViewModel.isGuest = true
+                authViewModel.isLoggedIn = true
+                authViewModel.isLoading = false
             }
         } message: {
-            Text("Your data will only be stored locally on this device and will not be synced to the cloud. You can create an account later to enable cloud backup.")
+            Text("Your data will only be stored locally on this device and will not be synced to the cloud.")
+        }
+        .sheet(isPresented: $showingForgotPassword) {
+            ForgotPasswordView()
+                .environment(authViewModel)
+        }
+    }
+
+    private func handleSubmit() {
+        clearMessages()
+
+        let trimmedEmail = email.trimmingCharacters(in: .whitespaces)
+        let trimmedPassword = password.trimmingCharacters(in: .whitespaces)
+
+        guard !trimmedEmail.isEmpty else {
+            validationError = "Please enter your email address."
+            return
+        }
+        guard !trimmedPassword.isEmpty else {
+            validationError = "Please enter your password."
+            return
+        }
+        guard trimmedPassword.count >= 6 else {
+            validationError = "Password must be at least 6 characters."
+            return
+        }
+
+        isSubmitting = true
+        Task {
+            if isSignUp {
+                let needsConfirmation = await authViewModel.signUp(email: trimmedEmail, password: trimmedPassword)
+                if needsConfirmation {
+                    // Switch to sign-in mode so user can sign in after confirming
+                    isSignUp = false
+                    password = ""
+                }
+            } else {
+                await authViewModel.signIn(email: trimmedEmail, password: trimmedPassword)
+            }
+            isSubmitting = false
+        }
+    }
+
+    private func clearMessages() {
+        validationError = nil
+        authViewModel.errorMessage = nil
+        authViewModel.successMessage = nil
+    }
+}
+
+// MARK: - Forgot Password
+
+struct ForgotPasswordView: View {
+    @Environment(AuthViewModel.self) private var authViewModel
+    @Environment(\.dismiss) private var dismiss
+    @State private var email = ""
+    @State private var isSending = false
+    @State private var validationError: String?
+
+    var body: some View {
+        NavigationView {
+            ZStack {
+                AppBackground(style: .login)
+
+                VStack(spacing: 24) {
+                    Spacer()
+
+                    Image(systemName: "envelope.badge.fill")
+                        .font(.system(size: 60))
+                        .foregroundColor(.white)
+
+                    VStack(spacing: 8) {
+                        Text("Reset Password")
+                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .foregroundColor(.white)
+
+                        Text("Enter your email and we'll send you a link to reset your password.")
+                            .font(.system(size: 15))
+                            .foregroundColor(.white.opacity(0.8))
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 20)
+                    }
+
+                    VStack(spacing: 14) {
+                        TextField("Email", text: $email)
+                            .textContentType(.emailAddress)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .keyboardType(.emailAddress)
+                            .padding(14)
+                            .background(.white.opacity(0.2))
+                            .cornerRadius(12)
+                            .foregroundColor(.white)
+                            .tint(.white)
+
+                        if let error = validationError ?? authViewModel.errorMessage {
+                            Text(error)
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(Color(red: 1.0, green: 0.6, blue: 0.6))
+                                .multilineTextAlignment(.center)
+                        }
+
+                        if let success = authViewModel.successMessage {
+                            Text(success)
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(Color(red: 0.6, green: 1.0, blue: 0.7))
+                                .multilineTextAlignment(.center)
+                        }
+
+                        Button {
+                            handleReset()
+                        } label: {
+                            HStack(spacing: 8) {
+                                if isSending {
+                                    ProgressView()
+                                        .tint(Color(red: 0.5, green: 0.4, blue: 0.7))
+                                }
+                                Text("Send Reset Link")
+                                    .font(.system(size: 18, weight: .semibold))
+                            }
+                            .foregroundColor(Color(red: 0.5, green: 0.4, blue: 0.7))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(.white)
+                            .cornerRadius(14)
+                        }
+                        .disabled(isSending)
+                        .opacity(isSending ? 0.7 : 1)
+                    }
+                    .padding(.horizontal, 32)
+
+                    Spacer()
+                    Spacer()
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                    .foregroundColor(.white)
+                }
+            }
+        }
+    }
+
+    private func handleReset() {
+        validationError = nil
+        authViewModel.errorMessage = nil
+        authViewModel.successMessage = nil
+
+        let trimmedEmail = email.trimmingCharacters(in: .whitespaces)
+        guard !trimmedEmail.isEmpty else {
+            validationError = "Please enter your email address."
+            return
+        }
+
+        isSending = true
+        Task {
+            await authViewModel.resetPassword(email: trimmedEmail)
+            isSending = false
         }
     }
 }
 
 #Preview {
-    LoginView(isLoggedIn: .constant(false))
+    LoginView()
+        .environment(AuthViewModel())
 }
