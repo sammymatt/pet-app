@@ -17,11 +17,17 @@ struct AuthViewModelTests {
         var signUpError: Error?
         var signOutError: Error?
         var resetPasswordError: Error?
+        var signInWithAppleError: Error?
+        var deleteAccountError: Error?
+        var resendVerificationError: Error?
 
         var signInCalledWith: (email: String, password: String)?
         var signUpCalledWith: (email: String, password: String)?
         var signOutCalled = false
         var resetPasswordCalledWith: String?
+        var signInWithAppleCalledWith: (idToken: String, nonce: String)?
+        var deleteAccountCalled = false
+        var resendVerificationCalledWith: String?
 
         func signIn(email: String, password: String) async throws {
             signInCalledWith = (email, password)
@@ -42,6 +48,21 @@ struct AuthViewModelTests {
         func resetPasswordForEmail(_ email: String) async throws {
             resetPasswordCalledWith = email
             if let error = resetPasswordError { throw error }
+        }
+
+        func signInWithApple(idToken: String, nonce: String) async throws {
+            signInWithAppleCalledWith = (idToken, nonce)
+            if let error = signInWithAppleError { throw error }
+        }
+
+        func deleteAccount() async throws {
+            deleteAccountCalled = true
+            if let error = deleteAccountError { throw error }
+        }
+
+        func resendVerificationEmail(email: String) async throws {
+            resendVerificationCalledWith = email
+            if let error = resendVerificationError { throw error }
         }
     }
 
@@ -214,5 +235,77 @@ struct AuthViewModelTests {
         let (vm, _) = makeSUT()
         let result = vm.friendlyError(TestError.mock("Something unexpected"))
         #expect(result == "Something unexpected")
+    }
+
+    // MARK: - Sign In With Apple
+
+    @Test func signInWithAppleTokenSuccess() async {
+        let (vm, mock) = makeSUT()
+
+        await vm.signInWithAppleToken(idToken: "test-token", nonce: "test-nonce")
+
+        #expect(vm.isLoggedIn == true)
+        #expect(vm.errorMessage == nil)
+        #expect(mock.signInWithAppleCalledWith?.idToken == "test-token")
+        #expect(mock.signInWithAppleCalledWith?.nonce == "test-nonce")
+    }
+
+    @Test func signInWithAppleTokenFailure() async {
+        let mock = MockAuthService()
+        mock.signInWithAppleError = TestError.mock("Apple sign in failed")
+        let (vm, _) = makeSUT(mock: mock)
+
+        await vm.signInWithAppleToken(idToken: "bad-token", nonce: "nonce")
+
+        #expect(vm.isLoggedIn == false)
+        #expect(vm.errorMessage == "Apple sign in failed")
+    }
+
+    // MARK: - Delete Account
+
+    @Test func deleteAccountSuccess() async {
+        let (vm, mock) = makeSUT()
+        vm.isLoggedIn = true
+
+        await vm.deleteAccount()
+
+        #expect(vm.isLoggedIn == false)
+        #expect(mock.deleteAccountCalled == true)
+        #expect(mock.signOutCalled == true)
+        #expect(vm.errorMessage == nil)
+    }
+
+    @Test func deleteAccountFailure() async {
+        let mock = MockAuthService()
+        mock.deleteAccountError = TestError.mock("Delete failed")
+        let (vm, _) = makeSUT(mock: mock)
+        vm.isLoggedIn = true
+
+        await vm.deleteAccount()
+
+        #expect(vm.errorMessage == "Delete failed")
+    }
+
+    // MARK: - Resend Verification
+
+    @Test func resendVerificationSuccess() async {
+        let (vm, mock) = makeSUT()
+
+        await vm.resendVerification(email: "test@example.com")
+
+        #expect(vm.successMessage == "Verification email sent! Check your inbox.")
+        #expect(vm.errorMessage == nil)
+        #expect(mock.resendVerificationCalledWith == "test@example.com")
+    }
+
+    @Test func resendVerificationFailure() async {
+        let mock = MockAuthService()
+        mock.resendVerificationError = TestError.mock("Rate limit exceeded")
+        let (vm, _) = makeSUT(mock: mock)
+
+        await vm.resendVerification(email: "test@example.com")
+
+        #expect(vm.errorMessage == "Rate limit exceeded")
+        #expect(vm.successMessage == nil)
     }
 }

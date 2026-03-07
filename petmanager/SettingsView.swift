@@ -16,6 +16,7 @@ struct SettingsView: View {
     @State private var showingHelpSupport = false
     @State private var showingFeatureRequest = false
     @State private var showingLogoutConfirmation = false
+    @State private var showingDeleteAccountConfirmation = false
     @State private var showingGuestSignUp = false
     
     var appVersion: String {
@@ -126,6 +127,14 @@ struct SettingsView: View {
                                     ) {
                                         showingLogoutConfirmation = true
                                     }
+
+                                    SettingsButton(
+                                        icon: "trash.fill",
+                                        title: "Delete Account",
+                                        color: Color(red: 1.0, green: 0.3, blue: 0.3)
+                                    ) {
+                                        showingDeleteAccountConfirmation = true
+                                    }
                                 }
                             }
                             
@@ -169,6 +178,16 @@ struct SettingsView: View {
                 Text(authViewModel.isGuest
                      ? "Any data stored locally will remain on this device. You'll return to the login screen."
                      : "Are you sure you want to log out?")
+            }
+            .alert("Delete Account?", isPresented: $showingDeleteAccountConfirmation) {
+                Button("Cancel", role: .cancel) { }
+                Button("Delete", role: .destructive) {
+                    Task {
+                        await authViewModel.deleteAccount()
+                    }
+                }
+            } message: {
+                Text("This will permanently delete your account and all associated data. This action cannot be undone.")
             }
             .sheet(isPresented: $showingGuestSignUp) {
                 GuestSignUpView()

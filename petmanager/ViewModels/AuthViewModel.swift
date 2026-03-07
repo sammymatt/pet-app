@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Supabase
+import AuthenticationServices
 
 @Observable
 class AuthViewModel {
@@ -18,6 +19,7 @@ class AuthViewModel {
 
     private let authService: AuthServiceProtocol
     private var authStateTask: Task<Void, Never>?
+    private var appleSignInCoordinator: AppleSignInCoordinator?
 
     init(authService: AuthServiceProtocol = SupabaseAuthService(), startListening: Bool = true) {
         self.authService = authService
@@ -78,6 +80,56 @@ class AuthViewModel {
         do {
             try await authService.resetPasswordForEmail(email)
             successMessage = "Password reset email sent! Check your inbox."
+        } catch {
+            errorMessage = friendlyError(error)
+        }
+    }
+
+    func signInWithApple() async {
+        errorMessage = nil
+        successMessage = nil
+        let coordinator = AppleSignInCoordinator()
+        appleSignInCoordinator = coordinator
+        do {
+            let result = try await coordinator.signIn()
+            try await authService.signInWithApple(idToken: result.idToken, nonce: result.nonce)
+            isLoggedIn = true
+        } catch let error as ASAuthorizationError where error.code == .canceled {
+            // User cancelled — do nothing
+        } catch {
+            errorMessage = friendlyError(error)
+        }
+        appleSignInCoordinator = nil
+    }
+
+    func signInWithAppleToken(idToken: String, nonce: String) async {
+        errorMessage = nil
+        successMessage = nil
+        do {
+            try await authService.signInWithApple(idToken: idToken, nonce: nonce)
+            isLoggedIn = true
+        } catch {
+            errorMessage = friendlyError(error)
+        }
+    }
+
+    func deleteAccount() async {
+        errorMessage = nil
+        do {
+            try await authService.deleteAccount()
+            try await authService.signOut()
+            isLoggedIn = false
+        } catch {
+            errorMessage = friendlyError(error)
+        }
+    }
+
+    func resendVerification(email: String) async {
+        errorMessage = nil
+        successMessage = nil
+        do {
+            try await authService.resendVerificationEmail(email: email)
+            successMessage = "Verification email sent! Check your inbox."
         } catch {
             errorMessage = friendlyError(error)
         }

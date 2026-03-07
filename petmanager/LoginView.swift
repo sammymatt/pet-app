@@ -16,6 +16,8 @@ struct LoginView: View {
     @State private var showingForgotPassword = false
     @State private var isSubmitting = false
     @State private var validationError: String?
+    @State private var showResendVerification = false
+    @State private var lastEmail: String?
 
     var body: some View {
         ZStack {
@@ -92,6 +94,19 @@ struct LoginView: View {
                             .multilineTextAlignment(.center)
                     }
 
+                    if showResendVerification, let resendEmail = lastEmail {
+                        Button {
+                            Task {
+                                await authViewModel.resendVerification(email: resendEmail)
+                            }
+                        } label: {
+                            Text("Resend Verification Email")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.white)
+                                .underline()
+                        }
+                    }
+
                     // Primary action button
                     Button {
                         handleSubmit()
@@ -130,6 +145,24 @@ struct LoginView: View {
                         Rectangle().fill(.white.opacity(0.3)).frame(height: 1)
                     }
                     .padding(.vertical, 4)
+
+                    Button {
+                        Task {
+                            await authViewModel.signInWithApple()
+                        }
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "apple.logo")
+                                .font(.system(size: 18))
+                            Text("Sign in with Apple")
+                                .font(.system(size: 16, weight: .semibold))
+                        }
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color.black)
+                        .cornerRadius(14)
+                    }
 
                     Button {
                         showingGuestWarning = true
@@ -182,16 +215,20 @@ struct LoginView: View {
         }
 
         isSubmitting = true
+        lastEmail = trimmedEmail
         Task {
             if isSignUp {
                 let needsConfirmation = await authViewModel.signUp(email: trimmedEmail, password: trimmedPassword)
                 if needsConfirmation {
-                    // Switch to sign-in mode so user can sign in after confirming
                     isSignUp = false
                     password = ""
+                    showResendVerification = true
                 }
             } else {
                 await authViewModel.signIn(email: trimmedEmail, password: trimmedPassword)
+                if authViewModel.errorMessage?.contains("confirm your account") == true {
+                    showResendVerification = true
+                }
             }
             isSubmitting = false
         }
@@ -201,6 +238,7 @@ struct LoginView: View {
         validationError = nil
         authViewModel.errorMessage = nil
         authViewModel.successMessage = nil
+        showResendVerification = false
     }
 }
 
