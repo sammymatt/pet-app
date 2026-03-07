@@ -1,0 +1,12 @@
+# Secrets
+petmanager/Secrets.swift
+
+# Xcode
+*.xcuserstate
+*.xcscmblueprint
+xcuserdata/
+DerivedData/
+*.xccheckout
+
+# macOS
+.DS_Store

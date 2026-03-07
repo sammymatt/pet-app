@@ -16,10 +16,16 @@ class AuthViewModel {
     var errorMessage: String?
     var successMessage: String?
 
+    private let authService: AuthServiceProtocol
     private var authStateTask: Task<Void, Never>?
 
-    init() {
-        listenForAuthChanges()
+    init(authService: AuthServiceProtocol = SupabaseAuthService(), startListening: Bool = true) {
+        self.authService = authService
+        if startListening {
+            listenForAuthChanges()
+        } else {
+            isLoading = false
+        }
     }
 
     deinit {
@@ -30,10 +36,7 @@ class AuthViewModel {
         errorMessage = nil
         successMessage = nil
         do {
-            try await SupabaseManager.shared.client.auth.signIn(
-                email: email,
-                password: password
-            )
+            try await authService.signIn(email: email, password: password)
             isLoggedIn = true
         } catch {
             errorMessage = friendlyError(error)
@@ -45,13 +48,10 @@ class AuthViewModel {
         errorMessage = nil
         successMessage = nil
         do {
-            let response = try await SupabaseManager.shared.client.auth.signUp(
-                email: email,
-                password: password
-            )
+            let result = try await authService.signUp(email: email, password: password)
             // Supabase returns an empty identity list when the email is
             // already registered (to avoid leaking which emails exist).
-            if response.user.identities?.isEmpty == true {
+            if result.identities?.isEmpty == true {
                 errorMessage = "An account with this email already exists. Please sign in instead."
                 return false
             }
@@ -65,7 +65,7 @@ class AuthViewModel {
 
     func signOut() async {
         do {
-            try await SupabaseManager.shared.client.auth.signOut()
+            try await authService.signOut()
             isLoggedIn = false
         } catch {
             errorMessage = friendlyError(error)
@@ -76,7 +76,7 @@ class AuthViewModel {
         errorMessage = nil
         successMessage = nil
         do {
-            try await SupabaseManager.shared.client.auth.resetPasswordForEmail(email)
+            try await authService.resetPasswordForEmail(email)
             successMessage = "Password reset email sent! Check your inbox."
         } catch {
             errorMessage = friendlyError(error)
@@ -95,7 +95,7 @@ class AuthViewModel {
         }
     }
 
-    private func friendlyError(_ error: Error) -> String {
+    func friendlyError(_ error: Error) -> String {
         let message = error.localizedDescription
         if message.contains("Invalid login credentials") {
             return "Invalid email or password. Please try again."

@@ -15,8 +15,8 @@ struct SupabaseManager {
 
     private init() {
         client = SupabaseClient(
-            supabaseURL: URL(string: "YOUR_SUPABASE_URL")!,
-            supabaseKey: "YOUR_SUPABASE_ANON_KEY"
+            supabaseURL: URL(string: Secrets.supabaseURL)!,
+            supabaseKey: Secrets.supabaseKey
         )
     }
 }
